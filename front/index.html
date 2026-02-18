@@ -12,7 +12,7 @@
         <h1>MERIT <span class="version">BETA</span></h1>
         
         <div id="auth-form">
-            <input type="email" id="email" placeholder="Email de Líder">
+            <input type="email" id="email" placeholder="Email de Usuario">
             <input type="password" id="password" placeholder="Contraseña">
             <div class="buttons">
                 <button onclick="signUp()">Registrar</button>
@@ -21,14 +21,26 @@
         </div>
 
         <div id="dashboard" style="display:none;">
-            <h2>Bienvenido, Aspirante</h2>
+            <h2>Estado del Aspirante</h2>
             <div class="stats">
+                <p>Rol: <strong id="user-role">...</strong></p>
                 <p>Nivel: <span id="user-level">1</span></p>
-                <p>Experiencia: <span id="user-xp">0</span></p>
+                <p>Experiencia: <span id="user-xp">0</span> XP</p>
+                <p><small>Tu ID: <span id="my-id" style="color: #666;"></span></small></p>
             </div>
-            <button onclick="signOut()">Cerrar Sesión</button>
+
+            <div id="validator-panel" style="display:none; border-top: 2px solid #333; margin-top: 20px; padding-top: 15px;">
+                <h3 style="color: #00ff41;">ASIGNAR MÉRITOS</h3>
+                <input type="text" id="target-id" placeholder="Pegar ID del Aspirante">
+                <select id="difficulty">
+                    <option value="10">Tarea Fácil (+10 XP)</option>
+                    <option value="50">Tarea Media (+50 XP)</option>
+                    <option value="100">Tarea Difícil (+100 XP)</option>
+                </select>
+                <button id="btn-validate" onclick="assignXP()">VALIDAR Y SUBIR XP</button>
+            </div>
+
+            <button onclick="signOut()" style="margin-top: 30px; background: #ff4141; color: white;">Cerrar Sesión</button>
         </div>
     </div>
-    <script src="script.js"></script>
-</body>
-</html>
+    <script src="
