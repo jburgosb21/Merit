@@ -4,116 +4,92 @@ const SUPABASE_KEY = "sb_publishable_pK-PZE3e0Ix4sJACOduGvQ_wVw4Fw57";
 
 const _merit = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Registro
 async function signUp() {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
-    if (!email || !password) return alert("Completa los campos.");
+    const valId = document.getElementById('validator-code').value.trim();
 
-    const { data, error } = await _merit.auth.signUp({ email, password });
+    if (!email || !password) return alert("Faltan datos.");
+
+    // Enviamos el validator_id dentro de 'options' para que el Trigger lo atrape
+    const { data, error } = await _merit.auth.signUp({
+        email,
+        password,
+        options: {
+            data: { validator_id: valId || null }
+        }
+    });
+
     if (error) alert("Error: " + error.message);
-    else alert("¡Registro enviado! Revisa tu email para activar la cuenta.");
+    else alert("¡Registro exitoso! Confirma tu correo si es necesario.");
 }
 
-// Inicio de Sesión
 async function signIn() {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
-
     const { data, error } = await _merit.auth.signInWithPassword({ email, password });
-    if (error) alert("Error: " + error.message);
+    if (error) alert("Credenciales inválidas");
     else loadProfile(data.user.id);
 }
 
-// Carga del perfil y lógica de roles
 async function loadProfile(userId) {
-    const { data: profile, error } = await _merit
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-    if (error) {
-        console.error("Error cargando perfil:", error);
-        return alert("Perfil no encontrado.");
-    }
+    const { data: profile, error } = await _merit.from('profiles').select('*').eq('id', userId).single();
+    if (error) return alert("Perfil no encontrado.");
 
     document.getElementById('user-role').innerText = profile.role.toUpperCase();
     document.getElementById('user-xp').innerText = profile.xp;
     document.getElementById('user-level').innerText = profile.level;
     document.getElementById('my-id').innerText = profile.id;
 
-    // Si eres validador, mostramos el panel y cargamos la lista de otros usuarios
     if (profile.role === 'validador') {
         document.getElementById('validator-panel').style.display = 'block';
-        fetchAspirants(); // Función para llenar la lista
+        fetchMyAspirants(profile.id); // Solo carga los suyos
     }
     showDashboard();
 }
 
-// NUEVA FUNCIÓN: Obtiene la lista de usuarios que no son validadores
-async function fetchAspirants() {
+// FILTRADO: Solo muestra aspirantes vinculados a este validador
+async function fetchMyAspirants(myId) {
     const { data: aspirants, error } = await _merit
         .from('profiles')
         .select('id, email, xp, level')
-        .eq('role', 'aspirante'); // Solo trae a los que tienen rol aspirante
+        .eq('validator_id', myId); // <--- Aquí ocurre la magia del vínculo
 
-    if (error) return console.error("Error cargando lista:", error);
+    if (error) return console.error(error);
 
     const selector = document.getElementById('user-selector');
-    selector.innerHTML = '<option value="">-- Selecciona un Usuario --</option>';
+    selector.innerHTML = '<option value="">-- Elige un Aspirante --</option>';
+
+    if (aspirants.length === 0) {
+        selector.innerHTML = '<option value="">Sin aspirantes vinculados</option>';
+        return;
+    }
 
     aspirants.forEach(user => {
         const option = document.createElement('option');
         option.value = user.id;
-        // Mostramos el email y sus stats actuales para que sepas a quién eliges
-        option.text = `${user.email} (Nvl: ${user.level} | XP: ${user.xp})`;
+        option.text = `${user.email} (Lvl: ${user.level})`;
         selector.appendChild(option);
     });
 }
 
-// Asignación de XP con subida de nivel automática
 async function assignXP() {
     const targetId = document.getElementById('user-selector').value;
-    const pointsToAdd = parseInt(document.getElementById('difficulty').value);
+    const points = parseInt(document.getElementById('difficulty').value);
+    if (!targetId) return alert("Selecciona a alguien.");
 
-    if (!targetId) return alert("Por favor, selecciona un aspirante de la lista.");
+    const { data: target } = await _merit.from('profiles').select('xp').eq('id', targetId).single();
+    
+    let totalXP = target.xp + points;
+    let newLevel = Math.floor(totalXP / 100) + 1;
 
-    // 1. Obtenemos datos del usuario seleccionado
-    const { data: target, error: fetchError } = await _merit
-        .from('profiles')
-        .select('xp, level')
-        .eq('id', targetId)
-        .single();
+    const { error } = await _merit.from('profiles').update({ xp: totalXP, level: newLevel }).eq('id', targetId);
 
-    if (fetchError || !target) return alert("No se pudo obtener la información del usuario.");
-
-    // 2. Calculamos nueva XP y Nivel (Subida cada 100 XP)
-    let totalXP = target.xp + pointsToAdd;
-    let newLevel = Math.floor(totalXP / 100) + 1; 
-
-    // 3. Actualizamos en Supabase
-    const { error: updateError } = await _merit
-        .from('profiles')
-        .update({ 
-            xp: totalXP, 
-            level: newLevel 
-        })
-        .eq('id', targetId);
-
-    if (updateError) {
-        alert("No tienes permisos suficientes.");
-    } else {
-        alert(`¡Logro validado! El usuario ahora tiene ${totalXP} XP.`);
-        
-        // Refrescamos la lista para ver los cambios de inmediato
-        fetchAspirants();
-        
-        // Si te validaste a ti mismo (si fueras aspirante), actualizamos tu vista principal
+    if (error) alert("Error al asignar");
+    else {
+        alert("¡Puntos otorgados!");
         const currentUserId = (await _merit.auth.getUser()).data.user.id;
-        if (targetId === currentUserId) {
-            loadProfile(currentUserId);
-        }
+        fetchMyAspirants(currentUserId);
     }
 }
 
