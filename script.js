@@ -1,27 +1,47 @@
-// Configuración de Conexión
 const SUPABASE_URL = "https://kwedbohsgorrwrrtblhg.supabase.co";
-const SUPABASE_KEY = "sb_publishable_pK-PZE3e0Ix4sJACOduGvQ_wVw4Fw57"; 
-
+const SUPABASE_KEY = "sb_publishable_pK-PZE3eOlk4sJACOduGvQ_wVw4Fw57"; 
 const _merit = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Ejecutar al cargar la página: Llenar la lista de validadores para el registro
+document.addEventListener('DOMContentLoaded', fetchAllValidators);
+
+async function fetchAllValidators() {
+    const { data: validators, error } = await _merit
+        .from('profiles')
+        .select('id, email')
+        .eq('role', 'validador');
+
+    const list = document.getElementById('validator-list');
+    if (error || !validators) {
+        list.innerHTML = '<option value="">Error al cargar</option>';
+        return;
+    }
+
+    list.innerHTML = '<option value="">-- Elige a tu Mentor --</option>';
+    validators.forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v.id;
+        opt.text = v.email;
+        list.appendChild(opt);
+    });
+}
 
 async function signUp() {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
-    const valId = document.getElementById('validator-code').value.trim();
+    const valId = document.getElementById('validator-list').value;
 
-    if (!email || !password) return alert("Faltan datos.");
+    if (!email || !password) return alert("Completa los datos.");
+    if (!valId) return alert("Debes seleccionar un Validador para registrarte.");
 
-    // Enviamos el validator_id dentro de 'options' para que el Trigger lo atrape
-    const { data, error } = await _merit.auth.signUp({
+    const { error } = await _merit.auth.signUp({
         email,
         password,
-        options: {
-            data: { validator_id: valId || null }
-        }
+        options: { data: { validator_id: valId } }
     });
 
     if (error) alert("Error: " + error.message);
-    else alert("¡Registro exitoso! Confirma tu correo si es necesario.");
+    else alert("¡Registro exitoso! Confirma tu correo.");
 }
 
 async function signIn() {
@@ -43,34 +63,30 @@ async function loadProfile(userId) {
 
     if (profile.role === 'validador') {
         document.getElementById('validator-panel').style.display = 'block';
-        fetchMyAspirants(profile.id); // Solo carga los suyos
+        fetchMyAspirants(profile.id);
     }
     showDashboard();
 }
 
-// FILTRADO: Solo muestra aspirantes vinculados a este validador
 async function fetchMyAspirants(myId) {
     const { data: aspirants, error } = await _merit
         .from('profiles')
         .select('id, email, xp, level')
-        .eq('validator_id', myId); // <--- Aquí ocurre la magia del vínculo
-
-    if (error) return console.error(error);
+        .eq('validator_id', myId);
 
     const selector = document.getElementById('user-selector');
     selector.innerHTML = '<option value="">-- Elige un Aspirante --</option>';
 
-    if (aspirants.length === 0) {
-        selector.innerHTML = '<option value="">Sin aspirantes vinculados</option>';
-        return;
+    if (aspirants && aspirants.length > 0) {
+        aspirants.forEach(user => {
+            const option = document.createElement('option');
+            option.value = user.id;
+            option.text = `${user.email} (Lvl: ${user.level})`;
+            selector.appendChild(option);
+        });
+    } else {
+        selector.innerHTML = '<option value="">Sin aspirantes asignados</option>';
     }
-
-    aspirants.forEach(user => {
-        const option = document.createElement('option');
-        option.value = user.id;
-        option.text = `${user.email} (Lvl: ${user.level})`;
-        selector.appendChild(option);
-    });
 }
 
 async function assignXP() {
@@ -87,9 +103,9 @@ async function assignXP() {
 
     if (error) alert("Error al asignar");
     else {
-        alert("¡Puntos otorgados!");
-        const currentUserId = (await _merit.auth.getUser()).data.user.id;
-        fetchMyAspirants(currentUserId);
+        alert("¡Progreso actualizado!");
+        const { data } = await _merit.auth.getUser();
+        fetchMyAspirants(data.user.id);
     }
 }
 

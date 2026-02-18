@@ -16,8 +16,10 @@
             <input type="password" id="password" placeholder="Contraseña">
             
             <div id="register-extra" style="margin-top: 10px;">
-                <p style="font-size: 0.7rem; color: #888; margin-bottom: 5px;">Si te registras como Aspirante:</p>
-                <input type="text" id="validator-code" placeholder="ID de tu Validador">
+                <p style="font-size: 0.7rem; color: #888; margin-bottom: 5px;">Si eres Aspirante, elige a tu Validador:</p>
+                <select id="validator-list">
+                    <option value="">Cargando validadores...</option>
+                </select>
             </div>
 
             <div class="buttons">
@@ -33,12 +35,11 @@
                 <p>Nivel: <span id="user-level">1</span></p>
                 <p>Experiencia: <span id="user-xp">0</span> XP</p>
                 <p><small>Tu ID: <span id="my-id" style="color: #00ff41; font-weight: bold;"></span></small></p>
-                <p style="font-size: 0.7rem; color: #666;">Comparte este ID con tus aspirantes</p>
             </div>
 
             <div id="validator-panel" style="display:none; border-top: 2px solid #333; margin-top: 20px; padding-top: 15px;">
                 <h3 style="color: #00ff41;">MODO VALIDADOR</h3>
-                <p style="font-size: 0.8rem; text-align: left;">Tus Aspirantes asignados:</p>
+                <p style="font-size: 0.8rem;">Tus Aspirantes:</p>
                 <select id="user-selector">
                     <option value="">Cargando mis aspirantes...</option>
                 </select>
