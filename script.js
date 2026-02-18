@@ -1,21 +1,16 @@
 const SUPABASE_URL = "https://kwedbohsgorrwrrtblhg.supabase.co";
 const SUPABASE_KEY = "sb_publishable_pK-PZE3e0Ix4sJACOduGvQ_wVw4Fw57"; 
+
 const _merit = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Al cargar la web, llenamos la lista de Validadores
-document.addEventListener('DOMContentLoaded', fetchValidators);
+document.addEventListener('DOMContentLoaded', getValidators);
 
-async function fetchValidators() {
-    const { data, error } = await _merit.from('profiles').select('id, email').eq('role', 'validador');
+async function getValidators() {
+    const { data } = await _merit.from('profiles').select('id, email').eq('role', 'validador');
     const list = document.getElementById('validator-list');
-    if (error) return list.innerHTML = '<option>Error al cargar</option>';
-    
     list.innerHTML = '<option value="">-- Elige un Validador --</option>';
-    data.forEach(v => {
-        let opt = document.createElement('option');
-        opt.value = v.id;
-        opt.text = v.email;
-        list.appendChild(opt);
+    data?.forEach(v => {
+        list.innerHTML += `<option value="${v.id}">${v.email}</option>`;
     });
 }
 
@@ -24,68 +19,73 @@ async function signUp() {
     const password = document.getElementById('password').value;
     const valId = document.getElementById('validator-list').value;
 
-    if (!valId) return alert("Debes elegir un Validador.");
+    if (!valId) return alert("Selecciona un mentor antes de registrarte.");
 
-    const { error } = await _merit.auth.signUp({
+    const { data, error } = await _merit.auth.signUp({
         email, password,
         options: { data: { validator_id: valId } }
     });
 
-    if (error) alert(error.message);
-    else alert("¡Registrado! Revisa tu email.");
+    if (error) alert("Error: " + error.message);
+    else alert("¡Registro listo! Si el correo no llega, revisa la tabla 'profiles' en Supabase.");
 }
 
 async function signIn() {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
     const { data, error } = await _merit.auth.signInWithPassword({ email, password });
-    if (error) alert("Error de acceso.");
-    else loadProfile(data.user.id);
+    
+    if (error) {
+        alert("Credenciales incorrectas.");
+    } else {
+        checkProfile(data.user.id);
+    }
 }
 
-async function loadProfile(userId) {
-    const { data: profile } = await _merit.from('profiles').select('*').eq('id', userId).single();
+async function checkProfile(uid) {
+    const { data: profile, error } = await _merit.from('profiles').select('*').eq('id', uid).single();
     
-    document.getElementById('user-role').innerText = profile.role.toUpperCase();
-    document.getElementById('user-xp').innerText = profile.xp;
+    if (!profile) {
+        console.log("No hay perfil para este ID:", uid);
+        return alert("Tu usuario existe pero no tiene perfil. ¿Ejecutaste el SQL del paso 1?");
+    }
+
+    document.getElementById('user-role').innerText = profile.role;
     document.getElementById('user-level').innerText = profile.level;
-    document.getElementById('my-id').innerText = profile.id;
+    document.getElementById('user-xp').innerText = profile.xp;
 
     if (profile.role === 'validador') {
         document.getElementById('validator-panel').style.display = 'block';
-        fetchAspirants(profile.id);
+        loadMyAspirants(uid);
     }
     
     document.getElementById('auth-form').style.display = 'none';
     document.getElementById('dashboard').style.display = 'block';
 }
 
-async function fetchAspirants(valId) {
-    const { data } = await _merit.from('profiles').select('*').eq('validator_id', valId);
+async function loadMyAspirants(myId) {
+    const { data } = await _merit.from('profiles').select('*').eq('validator_id', myId);
     const sel = document.getElementById('user-selector');
-    sel.innerHTML = '<option value="">Selecciona Aspirante</option>';
-    data.forEach(a => {
-        let opt = document.createElement('option');
-        opt.value = a.id;
-        opt.text = `${a.email} (XP: ${a.xp})`;
-        sel.appendChild(opt);
+    sel.innerHTML = '<option value="">Elige Aspirante</option>';
+    data?.forEach(a => {
+        sel.innerHTML += `<option value="${a.id}">${a.email}</option>`;
     });
 }
 
 async function assignXP() {
-    const targetId = document.getElementById('user-selector').value;
-    const points = parseInt(document.getElementById('difficulty').value);
+    const target = document.getElementById('user-selector').value;
+    const pts = parseInt(document.getElementById('difficulty').value);
     
-    const { data: target } = await _merit.from('profiles').select('xp').eq('id', targetId).single();
-    let newXP = target.xp + points;
+    const { data: current } = await _merit.from('profiles').select('xp').eq('id', target).single();
+    let newXP = (current.xp || 0) + pts;
     let newLvl = Math.floor(newXP / 100) + 1;
 
-    await _merit.from('profiles').update({ xp: newXP, level: newLvl }).eq('id', targetId);
-    alert("¡Puntos otorgados!");
-    loadProfile((await _merit.auth.getUser()).data.user.id);
+    await _merit.from('profiles').update({ xp: newXP, level: newLvl }).eq('id', target);
+    alert("¡Mérito validado!");
+    location.reload(); 
 }
 
-async function signOut() {
-    await _merit.auth.signOut();
+function signOut() {
+    _merit.auth.signOut();
     location.reload();
 }

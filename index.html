@@ -2,8 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Merit System - Beta</title>
+    <title>Merit Local - Sistema de Disciplina</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -12,46 +11,38 @@
         <h1>MERIT <span class="version">BETA</span></h1>
         
         <div id="auth-form">
-            <input type="email" id="email" placeholder="Email">
-            <input type="password" id="password" placeholder="Contraseña">
+            <input type="email" id="email" placeholder="Correo electrónico">
+            <input type="password" id="password" placeholder="Tu clave">
             
-            <div id="register-fields" style="margin-top: 15px;">
-                <p style="font-size: 0.75rem; color: #888; margin-bottom: 5px;">Si eres Aspirante, elige a tu Mentor:</p>
-                <select id="validator-list">
-                    <option value="">Cargando mentores...</option>
-                </select>
+            <div id="reg-box" style="margin-top: 15px;">
+                <label style="font-size: 0.7rem; color: #888;">Elegir Mentor (Solo para nuevos registros):</label>
+                <select id="validator-list"></select>
             </div>
 
-            <div class="buttons" style="margin-top: 20px;">
+            <div class="buttons">
                 <button onclick="signUp()">Registrar</button>
                 <button onclick="signIn()">Entrar</button>
             </div>
         </div>
 
         <div id="dashboard" style="display:none;">
-            <div class="stats">
-                <h2>Estado del Perfil</h2>
-                <p>Rol: <strong id="user-role">...</strong></p>
-                <p>Nivel: <span id="user-level">1</span></p>
-                <p>XP: <span id="user-xp">0</span></p>
-                <p><small>ID: <span id="my-id"></span></small></p>
+            <div class="stats-box">
+                <p>Rol: <strong id="user-role"></strong></p>
+                <p>Nivel: <span id="user-level"></span></p>
+                <p>XP: <span id="user-xp"></span></p>
             </div>
 
-            <div id="validator-panel" style="display:none; border-top: 2px solid #333; margin-top: 20px; padding-top: 20px;">
-                <h3 style="color: #00ff41;">PANEL DE CONTROL</h3>
-                <select id="user-selector">
-                    <option value="">Mis Aspirantes...</option>
+            <div id="validator-panel" style="display:none;">
+                <h3>GESTIÓN DE ASPIRANTES</h3>
+                <select id="user-selector"></select>
+                <select id="difficulty">
+                    <option value="10">Tarea Fácil (+10 XP)</option>
+                    <option value="50">Tarea Media (+50 XP)</option>
+                    <option value="100">Hito (+100 XP)</option>
                 </select>
-
-                <select id="difficulty" style="margin-top: 10px;">
-                    <option value="10">Tarea Simple (+10 XP)</option>
-                    <option value="50">Tarea Importante (+50 XP)</option>
-                    <option value="100">Hito Disciplinario (+100 XP)</option>
-                </select>
-                <button onclick="assignXP()" style="background: #00ff41; color: black; width: 100%; margin-top: 10px;">VALIDAR MÉRITO</button>
+                <button onclick="assignXP()">DAR PUNTOS</button>
             </div>
-
-            <button onclick="signOut()" style="margin-top: 30px; background: #ff4141; color: white;">Cerrar Sesión</button>
+            <button onclick="signOut()" style="background: red;">Salir</button>
         </div>
     </div>
     <script src="script.js"></script>
