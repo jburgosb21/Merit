@@ -31,16 +31,18 @@
 
             <div id="validator-panel" style="display:none; border-top: 2px solid #333; margin-top: 20px; padding-top: 15px;">
                 <h3 style="color: #00ff41;">ASIGNAR MÉRITOS</h3>
-                <input type="text" id="target-id" placeholder="Pegar ID del Aspirante">
+                <input type="text" id="target-id" placeholder="ID del Aspirante">
                 <select id="difficulty">
                     <option value="10">Tarea Fácil (+10 XP)</option>
                     <option value="50">Tarea Media (+50 XP)</option>
                     <option value="100">Tarea Difícil (+100 XP)</option>
                 </select>
-                <button id="btn-validate" onclick="assignXP()">VALIDAR Y SUBIR XP</button>
+                <button id="btn-validate" onclick="assignXP()">VALIDAR LOGRO</button>
             </div>
 
             <button onclick="signOut()" style="margin-top: 30px; background: #ff4141; color: white;">Cerrar Sesión</button>
         </div>
     </div>
-    <script src="
+    <script src="script.js"></script>
+</body>
+</html>

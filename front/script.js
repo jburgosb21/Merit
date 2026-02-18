@@ -1,47 +1,36 @@
-// Configuración de Supabase
+// Configuración de Conexión
 const SUPABASE_URL = "https://kwedbohsgorrwrrtblhg.supabase.co";
-const SUPABASE_KEY = "sb_publishable_pK-PZE3e0Ix4sJACOduGvQ_wVw4Fw57"; 
+const SUPABASE_KEY = "sb_publishable_pK-PZE3eOlk4sJACOduGvQ_wVw4Fw57"; 
 
-// createClient: Palabra reservada de la librería para establecer el túnel de datos
+// createClient: Crea el enlace de comunicación entre tu web y Supabase
 const _merit = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Registro de nuevos usuarios
+// signUp: Registra al usuario en el sistema de Autenticación
 async function signUp() {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
-    
-    if (!email || !password) return alert("Ingresa datos.");
+    if (!email || !password) return alert("Completa los campos.");
 
-    // .signUp: Crea al usuario en el sistema de autenticación de Supabase
     const { data, error } = await _merit.auth.signUp({ email, password });
-    
-    if (error) {
-        alert("Error: " + error.message);
-    } else {
-        alert("¡Registro enviado! Revisa tu email para activar tu cuenta.");
-    }
+    if (error) alert("Error: " + error.message);
+    else alert("¡Registro enviado! Revisa tu email para activar la cuenta.");
 }
 
-// Inicio de Sesión
+// signIn: Inicia sesión y dispara la carga del perfil
 async function signIn() {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
 
-    // .signInWithPassword: Valida credenciales y devuelve un 'token' de sesión
+    // await: Detiene la ejecución hasta que el servidor responda (promesa)
     const { data, error } = await _merit.auth.signInWithPassword({ email, password });
-    
-    if (error) {
-        alert("Error: " + error.message);
-    } else {
-        // user.id: El identificador único universal (UUID) del usuario
-        loadProfile(data.user.id);
-    }
+    if (error) alert("Error: " + error.message);
+    else loadProfile(data.user.id);
 }
 
-// Carga datos de la tabla pública 'profiles'
+// loadProfile: Busca los datos en la tabla 'profiles' creada por SQL
 async function loadProfile(userId) {
-    // .from('profiles').select('*'): Selecciona todas las columnas de tu tabla
-    // .single(): Asegura que solo traiga un objeto, no una lista
+    // .from().select().eq(): Busca en la tabla 'profiles' donde el ID coincida
+    // .single(): Devuelve un objeto directo en lugar de un arreglo/lista
     const { data: profile, error } = await _merit
         .from('profiles')
         .select('*')
@@ -49,55 +38,44 @@ async function loadProfile(userId) {
         .single();
 
     if (error) {
-        console.error("Error al cargar perfil:", error);
-        // Si el perfil no existe aún, lo creamos manualmente como respaldo
-        return alert("Perfil no encontrado. ¿Confirmaste tu email?");
+        console.error("Error cargando perfil:", error);
+        return alert("Perfil no encontrado. ¿Confirmaste tu correo?");
     }
 
-    // Actualizamos la Interfaz de Usuario (UI) con los datos recibidos
+    // Inyectamos los datos en el HTML (UI)
     document.getElementById('user-role').innerText = profile.role.toUpperCase();
     document.getElementById('user-xp').innerText = profile.xp;
     document.getElementById('user-level').innerText = profile.level;
     document.getElementById('my-id').innerText = profile.id;
 
-    // Lógica de Rol: Si eres 'validador', se muestra el panel secreto
+    // Lógica condicional: Si el rol es validador, habilitamos el panel
     if (profile.role === 'validador') {
         document.getElementById('validator-panel').style.display = 'block';
     }
-
     showDashboard();
 }
 
-// Asignar XP (Función exclusiva del Líder)
+// assignXP: Lógica del Líder para otorgar puntos a otros
 async function assignXP() {
-    const targetId = document.getElementById('target-id').value;
-    // .value de un select devuelve el 'value' de la opción marcada
-    const pointsToAdd = parseInt(document.getElementById('difficulty').value);
+    const targetId = document.getElementById('target-id').value.trim();
+    const points = parseInt(document.getElementById('difficulty').value);
 
-    if (!targetId) return alert("Pega el ID del aspirante.");
+    if (!targetId) return alert("Ingresa el ID del aspirante.");
 
-    // 1. Buscamos al aspirante para saber cuánta XP tiene actualmente
-    const { data: targetProfile, error: fetchError } = await _merit
+    // 1. Obtenemos XP actual del objetivo
+    const { data: target } = await _merit.from('profiles').select('xp').eq('id', targetId).single();
+
+    if (!target) return alert("Usuario no encontrado.");
+
+    // 2. .update(): Palabra reservada para modificar datos existentes
+    const { error } = await _merit
         .from('profiles')
-        .select('xp')
-        .eq('id', targetId)
-        .single();
-
-    if (fetchError) return alert("ID inválido o usuario no existe.");
-
-    const newXP = targetProfile.xp + pointsToAdd;
-
-    // 2. .update(): Modifica los datos en la base de datos
-    // .eq('id', targetId): Es la condición (Solo actualiza donde el ID coincida)
-    const { error: updateError } = await _merit
-        .from('profiles')
-        .update({ xp: newXP })
+        .update({ xp: target.xp + points })
         .eq('id', targetId);
 
-    if (updateError) {
-        alert("Error de permisos: " + updateError.message);
-    } else {
-        alert(`Mérito otorgado: +${pointsToAdd} XP asignados.`);
+    if (error) alert("Error de permisos: " + error.message);
+    else {
+        alert(`¡Puntos asignados! +${points} XP`);
         document.getElementById('target-id').value = "";
     }
 }
@@ -108,7 +86,6 @@ function showDashboard() {
 }
 
 async function signOut() {
-    // .signOut: Cierra la sesión y destruye el token en el navegador
     await _merit.auth.signOut();
     location.reload();
 }
