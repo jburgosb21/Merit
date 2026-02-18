@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merit - Sistema de Disciplina</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>MERIT <span class="version">BETA</span></h1>
+        
+        <div id="auth-form">
+            <input type="email" id="email" placeholder="Email de Líder">
+            <input type="password" id="password" placeholder="Contraseña">
+            <div class="buttons">
+                <button onclick="signUp()">Registrar</button>
+                <button onclick="signIn()">Entrar</button>
+            </div>
+        </div>
+
+        <div id="dashboard" style="display:none;">
+            <h2>Bienvenido, Aspirante</h2>
+            <p>Nivel: <span id="user-level">1</span></p>
+            <button onclick="signOut()">Cerrar Sesión</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

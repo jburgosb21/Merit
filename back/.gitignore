@@ -1,0 +1,10 @@
+# Secretos
+auth_key.json
+
+# Dependencias
+node_modules/
+dist/
+
+# Logs y basura
+npm-debug.log*
+.DS_Store
