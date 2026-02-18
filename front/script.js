@@ -1,5 +1,5 @@
 const SUPABASE_URL = "https://kwedbohsgorrwrrtblhg.supabase.co";
-const SUPABASE_KEY = "TU_ANON_KEY_AQUI"; // Búscala en Supabase: Settings -> API
+const SUPABASE_KEY = "sb_publishable_pK-PZE3e0Ix4sJACOduGvQ_wVw4Fw57"; // Búscala en Supabase: Settings -> API
 
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
