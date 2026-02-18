@@ -1,21 +1,24 @@
 // Configuración de Supabase
 const SUPABASE_URL = "https://kwedbohsgorrwrrtblhg.supabase.co";
 const SUPABASE_KEY = "sb_publishable_pK-PZE3e0Ix4sJACOduGvQ_wVw4Fw57"; 
+
+// createClient: Palabra reservada de la librería para establecer el túnel de datos
 const _merit = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Función de Registro
+// Registro de nuevos usuarios
 async function signUp() {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
     
     if (!email || !password) return alert("Ingresa datos.");
 
+    // .signUp: Crea al usuario en el sistema de autenticación de Supabase
     const { data, error } = await _merit.auth.signUp({ email, password });
     
     if (error) {
         alert("Error: " + error.message);
     } else {
-        alert("¡Registro enviado! Confirma tu correo para poder entrar.");
+        alert("¡Registro enviado! Revisa tu email para activar tu cuenta.");
     }
 }
 
@@ -24,18 +27,21 @@ async function signIn() {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
 
+    // .signInWithPassword: Valida credenciales y devuelve un 'token' de sesión
     const { data, error } = await _merit.auth.signInWithPassword({ email, password });
     
     if (error) {
         alert("Error: " + error.message);
     } else {
-        // Al entrar, cargamos los datos extendidos del perfil
+        // user.id: El identificador único universal (UUID) del usuario
         loadProfile(data.user.id);
     }
 }
 
-// Carga datos desde la tabla 'profiles' que creaste con SQL
+// Carga datos de la tabla pública 'profiles'
 async function loadProfile(userId) {
+    // .from('profiles').select('*'): Selecciona todas las columnas de tu tabla
+    // .single(): Asegura que solo traiga un objeto, no una lista
     const { data: profile, error } = await _merit
         .from('profiles')
         .select('*')
@@ -44,16 +50,17 @@ async function loadProfile(userId) {
 
     if (error) {
         console.error("Error al cargar perfil:", error);
-        return;
+        // Si el perfil no existe aún, lo creamos manualmente como respaldo
+        return alert("Perfil no encontrado. ¿Confirmaste tu email?");
     }
 
-    // Actualizar UI
+    // Actualizamos la Interfaz de Usuario (UI) con los datos recibidos
     document.getElementById('user-role').innerText = profile.role.toUpperCase();
     document.getElementById('user-xp').innerText = profile.xp;
     document.getElementById('user-level').innerText = profile.level;
     document.getElementById('my-id').innerText = profile.id;
 
-    // Mostrar panel si es validador
+    // Lógica de Rol: Si eres 'validador', se muestra el panel secreto
     if (profile.role === 'validador') {
         document.getElementById('validator-panel').style.display = 'block';
     }
@@ -61,36 +68,37 @@ async function loadProfile(userId) {
     showDashboard();
 }
 
-// Asignar XP a otro usuario (Acción del Líder)
+// Asignar XP (Función exclusiva del Líder)
 async function assignXP() {
     const targetId = document.getElementById('target-id').value;
+    // .value de un select devuelve el 'value' de la opción marcada
     const pointsToAdd = parseInt(document.getElementById('difficulty').value);
 
-    if (!targetId) return alert("Copia y pega el ID del aspirante aquí.");
+    if (!targetId) return alert("Pega el ID del aspirante.");
 
-    // 1. Obtener XP actual del objetivo
+    // 1. Buscamos al aspirante para saber cuánta XP tiene actualmente
     const { data: targetProfile, error: fetchError } = await _merit
         .from('profiles')
         .select('xp')
         .eq('id', targetId)
         .single();
 
-    if (fetchError) return alert("No se encontró al usuario con ese ID.");
+    if (fetchError) return alert("ID inválido o usuario no existe.");
 
-    // 2. Sumar puntos
     const newXP = targetProfile.xp + pointsToAdd;
 
-    // 3. Actualizar en Supabase
+    // 2. .update(): Modifica los datos en la base de datos
+    // .eq('id', targetId): Es la condición (Solo actualiza donde el ID coincida)
     const { error: updateError } = await _merit
         .from('profiles')
         .update({ xp: newXP })
         .eq('id', targetId);
 
     if (updateError) {
-        alert("No tienes permisos para realizar esta acción.");
+        alert("Error de permisos: " + updateError.message);
     } else {
-        alert(`¡Éxito! Se han otorgado ${pointsToAdd} XP al usuario.`);
-        document.getElementById('target-id').value = ""; // Limpiar campo
+        alert(`Mérito otorgado: +${pointsToAdd} XP asignados.`);
+        document.getElementById('target-id').value = "";
     }
 }
 
@@ -100,6 +108,7 @@ function showDashboard() {
 }
 
 async function signOut() {
+    // .signOut: Cierra la sesión y destruye el token en el navegador
     await _merit.auth.signOut();
     location.reload();
 }
