@@ -1,6 +1,6 @@
 // Configuración extraída de tus capturas
 const SUPABASE_URL = "https://kwedbohsgorrwrrtblhg.supabase.co";
-const SUPABASE_KEY = "sb_publishable_pK-PZE3eOlk4sJACOduGvQ_wVw4Fw57"; 
+const SUPABASE_KEY = "sb_publishable_pK-PZE3e0Ix4sJACOduGvQ_wVw4Fw57"; 
 
 // Inicialización del cliente
 const _merit = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
