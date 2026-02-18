@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Merit - Sistema de Disciplina</title>
+    <title>Merit System - Beta</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -12,44 +12,43 @@
         <h1>MERIT <span class="version">BETA</span></h1>
         
         <div id="auth-form">
-            <input type="email" id="email" placeholder="Email de Usuario">
+            <input type="email" id="email" placeholder="Email">
             <input type="password" id="password" placeholder="Contraseña">
             
-            <div id="register-extra" style="margin-top: 10px;">
-                <p style="font-size: 0.7rem; color: #888; margin-bottom: 5px;">Si eres Aspirante, elige a tu Validador:</p>
+            <div id="register-fields" style="margin-top: 15px;">
+                <p style="font-size: 0.75rem; color: #888; margin-bottom: 5px;">Si eres Aspirante, elige a tu Mentor:</p>
                 <select id="validator-list">
-                    <option value="">Cargando validadores...</option>
+                    <option value="">Cargando mentores...</option>
                 </select>
             </div>
 
-            <div class="buttons">
+            <div class="buttons" style="margin-top: 20px;">
                 <button onclick="signUp()">Registrar</button>
                 <button onclick="signIn()">Entrar</button>
             </div>
         </div>
 
         <div id="dashboard" style="display:none;">
-            <h2>Estado del Aspirante</h2>
             <div class="stats">
+                <h2>Estado del Perfil</h2>
                 <p>Rol: <strong id="user-role">...</strong></p>
                 <p>Nivel: <span id="user-level">1</span></p>
-                <p>Experiencia: <span id="user-xp">0</span> XP</p>
-                <p><small>Tu ID: <span id="my-id" style="color: #00ff41; font-weight: bold;"></span></small></p>
+                <p>XP: <span id="user-xp">0</span></p>
+                <p><small>ID: <span id="my-id"></span></small></p>
             </div>
 
-            <div id="validator-panel" style="display:none; border-top: 2px solid #333; margin-top: 20px; padding-top: 15px;">
-                <h3 style="color: #00ff41;">MODO VALIDADOR</h3>
-                <p style="font-size: 0.8rem;">Tus Aspirantes:</p>
+            <div id="validator-panel" style="display:none; border-top: 2px solid #333; margin-top: 20px; padding-top: 20px;">
+                <h3 style="color: #00ff41;">PANEL DE CONTROL</h3>
                 <select id="user-selector">
-                    <option value="">Cargando mis aspirantes...</option>
+                    <option value="">Mis Aspirantes...</option>
                 </select>
 
                 <select id="difficulty" style="margin-top: 10px;">
-                    <option value="10">Tarea Fácil (+10 XP)</option>
-                    <option value="50">Tarea Media (+50 XP)</option>
-                    <option value="100">Tarea Difícil (+100 XP)</option>
+                    <option value="10">Tarea Simple (+10 XP)</option>
+                    <option value="50">Tarea Importante (+50 XP)</option>
+                    <option value="100">Hito Disciplinario (+100 XP)</option>
                 </select>
-                <button id="btn-validate" onclick="assignXP()">VALIDAR LOGRO</button>
+                <button onclick="assignXP()" style="background: #00ff41; color: black; width: 100%; margin-top: 10px;">VALIDAR MÉRITO</button>
             </div>
 
             <button onclick="signOut()" style="margin-top: 30px; background: #ff4141; color: white;">Cerrar Sesión</button>
